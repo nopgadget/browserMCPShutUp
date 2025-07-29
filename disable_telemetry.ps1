@@ -43,44 +43,6 @@ function Rename-ExtensionToPreventUpdates {
     }
 }
 
-# Function to create .crx file from the modified extension
-function Create-CrxFile {
-    param([string]$extensionPath)
-    
-    $parentDir = Split-Path $extensionPath -Parent
-    $extensionName = Split-Path $extensionPath -Leaf
-    $crxFileName = "${extensionName}.crx"
-    $crxFilePath = Join-Path $parentDir $crxFileName
-    
-    try {
-        Write-Host "📦 Creating .crx file from modified extension..." -ForegroundColor Yellow
-        
-        # Create a temporary zip file
-        $tempZipPath = Join-Path $parentDir "${extensionName}_temp.zip"
-        
-        # Use .NET compression to create the zip
-        Add-Type -AssemblyName System.IO.Compression.FileSystem
-        [System.IO.Compression.ZipFile]::CreateFromDirectory($extensionPath, $tempZipPath)
-        
-        # Rename zip to .crx
-        if (Test-Path $crxFilePath) {
-            Remove-Item $crxFilePath -Force
-        }
-        Rename-Item $tempZipPath $crxFileName
-        
-        Write-Host "✅ .crx file created at: $crxFilePath" -ForegroundColor Green
-        Write-Host "📝 You can now install this .crx file in Chrome by:" -ForegroundColor Cyan
-        Write-Host "   1. Open Chrome and go to chrome://extensions/" -ForegroundColor Cyan
-        Write-Host "   2. Enable 'Developer mode' (toggle in top right)" -ForegroundColor Cyan
-        Write-Host "   3. Drag and drop the .crx file onto the extensions page" -ForegroundColor Cyan
-        
-        return $crxFilePath
-    } catch {
-        Write-Host "❌ Error creating .crx file: $($_.Exception.Message)" -ForegroundColor Red
-        return $null
-    }
-}
-
 # Function to replace analytics configurations
 function Disable-Analytics {
     param([string]$content)
@@ -276,7 +238,7 @@ Disable-IntegrityChecks
 $newExtensionPath = Rename-ExtensionToPreventUpdates $ExtensionPath
 
 # Create .crx file from the modified extension
-$crxFilePath = Create-CrxFile $newExtensionPath
+# $zipFilePath = Create-CrxFile $newExtensionPath # This line is removed
 
 Write-Host "`n🎉 Telemetry disabled and online features disabled! The extension will no longer send analytics data or connect to online services." -ForegroundColor Green
 Write-Host "📝 Note: You may need to reload the extension in your browser for changes to take effect." -ForegroundColor Yellow
@@ -284,13 +246,14 @@ Write-Host "🔗 All telemetry URLs now point to localhost:9999 (unresolvable)" 
 Write-Host "🔒 Integrity checks disabled to allow modified extension to work" -ForegroundColor Cyan
 Write-Host "🚫 Login/logout functionality disabled - extension works offline only" -ForegroundColor Cyan
 
-if ($crxFilePath) {
-    Write-Host "`n📦 .crx file created at: $crxFilePath" -ForegroundColor Green
-    Write-Host "🔄 Modified extension folder: $newExtensionPath" -ForegroundColor Green
-}
+Write-Host "`n📦 Modified extension folder: $newExtensionPath" -ForegroundColor Green
+Write-Host "📝 Installation instructions:" -ForegroundColor Cyan
+Write-Host "   1. Open Chrome and go to chrome://extensions/" -ForegroundColor Cyan
+Write-Host "   2. Enable 'Developer mode' (toggle in top right)" -ForegroundColor Cyan
+Write-Host "   3. Click 'Load unpacked' and select the modified extension folder:" -ForegroundColor Cyan
+Write-Host "      $newExtensionPath" -ForegroundColor Yellow
 
 Write-Host "`n🛡️ IMPORTANT: To prevent Chrome from overwriting your changes:" -ForegroundColor Yellow
 Write-Host "1. The extension folder has been renamed to prevent automatic updates" -ForegroundColor Cyan
-Write-Host "2. A .crx file has been created for easy installation" -ForegroundColor Cyan
-Write-Host "3. You can install the .crx file in Chrome's developer mode" -ForegroundColor Cyan
-Write-Host "4. Consider disabling automatic extension updates in Chrome settings" -ForegroundColor Cyan
+Write-Host "2. You can install the modified extension using 'Load unpacked' in Chrome's developer mode" -ForegroundColor Cyan
+Write-Host "3. Consider disabling automatic extension updates in Chrome settings" -ForegroundColor Cyan
