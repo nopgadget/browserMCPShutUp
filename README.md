@@ -110,10 +110,6 @@ The script automatically renames the extension folder to prevent Chrome from aut
 2. Use the renamed extension folder for installation
 3. Keep a backup of the modified extension
 
-### CRX_HEADER_INVALID Error
-
-This error was common with older versions that tried to create CRX files. The current Python version uses the "Load unpacked" method which avoids this issue entirely.
-
 ## Requirements
 
 - Python 3.6 or higher
